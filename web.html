@@ -3,10 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>AR Web Demo — MindAR</title>
+  <title>AR Web Demo — MindAR (v2)</title>
 
+  <!-- A-Frame -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 
+  <!-- MindAR -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
@@ -18,11 +20,9 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
     }
 
-    a-scene {
-      position: fixed;
-      inset: 0;
-    }
+    a-scene { position: fixed; inset: 0; }
 
+    /* Верхний статус */
     .topbar {
       position: fixed;
       top: 12px;
@@ -30,6 +30,7 @@
       right: 12px;
       display: flex;
       justify-content: space-between;
+      gap: 10px;
       z-index: 10;
       pointer-events: none;
     }
@@ -43,8 +44,12 @@
       padding: 10px 12px;
       backdrop-filter: blur(8px);
       font-size: 13px;
+      line-height: 1.2;
+      box-shadow: 0 10px 24px rgba(0,0,0,.25);
+      white-space: nowrap;
     }
 
+    /* Нижняя панель */
     .panel {
       position: fixed;
       left: 12px;
@@ -62,28 +67,34 @@
       border-radius: 18px;
       padding: 14px;
       backdrop-filter: blur(10px);
+      box-shadow: 0 12px 30px rgba(0,0,0,.35);
+    }
+
+    .hint {
+      opacity: .95;
+      font-size: 12px;
+      line-height: 1.35;
+      margin-bottom: 10px;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
     }
 
     button {
-      margin-top: 10px;
-      width: 100%;
+      flex: 1 1 auto;
       padding: 12px;
       border-radius: 14px;
       border: none;
       font-size: 15px;
-      font-weight: 600;
+      font-weight: 650;
       cursor: pointer;
     }
 
-    button.secondary {
-      background: rgba(255,255,255,.15);
-      color: #fff;
-    }
-
-    button.primary {
-      background: #ffffff;
-      color: #000;
-    }
+    button.primary { background: #ffffff; color: #000; }
+    button.secondary { background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.18); }
+    button:disabled { opacity: .65; cursor: not-allowed; }
   </style>
 </head>
 
@@ -96,13 +107,19 @@
 
   <div class="panel">
     <div class="card">
-      Наведи камеру на <b>маркер</b>.<br>
-      1 палец — перемещение • 2 пальца — масштаб и вращение
-      <button id="startBtn" class="primary">Запустить AR</button>
-      <button id="resetBtn" class="secondary" disabled>Сброс</button>
+      <div class="hint">
+        1) Нажми <b>«Запустить AR»</b> и разреши камеру.<br>
+        2) Наведи камеру на <b>маркер</b>.<br>
+        1 палец — перемещение • 2 пальца — масштаб и вращение
+      </div>
+      <div class="row">
+        <button id="startBtn" class="primary">Запустить AR</button>
+        <button id="resetBtn" class="secondary" disabled>Сброс</button>
+      </div>
     </div>
   </div>
 
+  <!-- AR сцена -->
   <a-scene
     id="scene"
     mindar-image="imageTargetSrc: marker.mind; autoStart: false; uiScanning: false; uiLoading: false;"
@@ -111,22 +128,25 @@
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: true"
   >
+    <!-- Камера -->
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <a-entity light="type: ambient; intensity: 0.95"></a-entity>
-    <a-entity light="type: directional; intensity: 1.1" position="0.2 1.2 1"></a-entity>
+    <!-- Свет: чуть усилен, чтобы модель точно была видна -->
+    <a-entity light="type: ambient; intensity: 1.0"></a-entity>
+    <a-entity light="type: directional; intensity: 1.2" position="0.2 1.4 1.0"></a-entity>
 
+    <!-- Якорь -->
     <a-entity id="markerRoot" mindar-image-target="targetIndex: 0">
+      <!-- ВАЖНО: добавили dracoDecoderPath + увеличили шанс увидеть модель -->
       <a-entity
-  id="object"
-  gltf-model="url(object.glb); dracoDecoderPath: https://www.gstatic.com/draco/v1/decoders/;"
-  position="0 0 0"
-  rotation="0 0 0"
-  scale="1 1 1"
-></a-entity>
-
+        id="object"
+        gltf-model="url(object.glb); dracoDecoderPath: https://www.gstatic.com/draco/v1/decoders/;"
+        position="0 0.08 0"
+        rotation="0 180 0"
+        scale="1 1 1"
       ></a-entity>
 
+      <!-- Подложка -->
       <a-ring position="0 -0.001 0"
               rotation="-90 0 0"
               radius-inner="0.18"
@@ -145,12 +165,26 @@
     const resetBtn = document.getElementById("resetBtn");
     const statusEl = document.getElementById("status");
 
+    // Сохраняем дефолтные трансформации для сброса
     const DEFAULT = {
-      pos: { x: 0, y: 0, z: 0 },
-      rotY: 0,
+      pos: { x: 0, y: 0.08, z: 0 },
+      rotYdeg: 180,
       scale: 1
     };
 
+    // === Диагностика загрузки модели ===
+    obj.addEventListener("model-loaded", () => {
+      statusEl.textContent = "Модель загружена ✅ Наведи на маркер";
+    });
+
+    obj.addEventListener("model-error", (e) => {
+      console.error("model-error", e);
+      statusEl.textContent = "Ошибка загрузки модели ❌ (см. Console)";
+      // оставим кнопку активной — вдруг пользователь перезагрузит
+      startBtn.disabled = false;
+    });
+
+    // === События маркера ===
     markerRoot.addEventListener("targetFound", () => {
       statusEl.textContent = "Маркер распознан ✅";
       resetBtn.disabled = false;
@@ -160,42 +194,37 @@
       statusEl.textContent = "Ищу маркер…";
     });
 
+    // === Запуск AR по клику (стабильно для iOS/Android) ===
     startBtn.addEventListener("click", async () => {
       try {
         statusEl.textContent = "Запуск камеры…";
         startBtn.disabled = true;
 
         if (!sceneEl.hasLoaded) {
-          await new Promise(res =>
-            sceneEl.addEventListener("loaded", res, { once: true })
-          );
+          await new Promise(res => sceneEl.addEventListener("loaded", res, { once: true }));
         }
 
         const arSystem = sceneEl.systems["mindar-image-system"];
         await arSystem.start();
 
-        statusEl.textContent = "Камера запущена";
+        statusEl.textContent = "Камера запущена. Наведи на маркер";
       } catch (e) {
         console.error(e);
-        statusEl.textContent = "Ошибка запуска";
+        statusEl.textContent = "Ошибка запуска AR ❌ (см. Console)";
         startBtn.disabled = false;
+        alert("Не удалось запустить AR. Проверь HTTPS и разрешение камеры.");
       }
     });
 
+    // === Сброс ===
     resetBtn.addEventListener("click", () => {
-      obj.object3D.position.set(
-        DEFAULT.pos.x,
-        DEFAULT.pos.y,
-        DEFAULT.pos.z
-      );
-      obj.object3D.rotation.y = DEFAULT.rotY;
-      obj.object3D.scale.set(
-        DEFAULT.scale,
-        DEFAULT.scale,
-        DEFAULT.scale
-      );
+      obj.object3D.position.set(DEFAULT.pos.x, DEFAULT.pos.y, DEFAULT.pos.z);
+      obj.object3D.rotation.y = (DEFAULT.rotYdeg * Math.PI) / 180;
+      obj.object3D.scale.set(DEFAULT.scale, DEFAULT.scale, DEFAULT.scale);
+      statusEl.textContent = "Сброс выполнен ↺";
     });
 
+    // === Жесты: перемещение / масштаб / вращение ===
     let mode = "none";
     let lastX = 0, lastY = 0;
     let startDist = 0;
@@ -259,17 +288,18 @@
         obj.object3D.scale.set(scale, scale, scale);
 
         const a = angle(e.touches[0], e.touches[1]);
-        obj.object3D.rotation.y =
-          (startRotY + (a - startAngle)) * Math.PI / 180;
+        obj.object3D.rotation.y = (startRotY + (a - startAngle)) * Math.PI / 180;
       }
     }, { passive: true });
 
-    document.addEventListener("touchend", () => {
-      if (event.touches.length === 0) mode = "none";
+    document.addEventListener("touchend", (e) => {
+      if (e.touches.length === 0) mode = "none";
+      if (e.touches.length === 1) {
+        mode = "drag";
+        lastX = e.touches[0].clientX;
+        lastY = e.touches[0].clientY;
+      }
     }, { passive: true });
   </script>
 </body>
 </html>
-
-
-
