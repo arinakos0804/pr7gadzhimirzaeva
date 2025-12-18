@@ -5,93 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>AR Web Demo — MindAR (v2)</title>
 
-  <!-- A-Frame -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-
-  <!-- MindAR -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
-    html, body {
-      margin: 0;
-      height: 100%;
-      overflow: hidden;
-      background: #05060a;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-    }
-
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #05060a; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
     a-scene { position: fixed; inset: 0; }
 
-    /* Верхний статус */
-    .topbar {
-      position: fixed;
-      top: 12px;
-      left: 12px;
-      right: 12px;
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      z-index: 10;
-      pointer-events: none;
-    }
+    .topbar { position: fixed; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; gap: 10px; z-index: 10; pointer-events: none; }
+    .badge { pointer-events: auto; color: #fff; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.2); border-radius: 14px; padding: 10px 12px; backdrop-filter: blur(8px); font-size: 13px; line-height: 1.2; box-shadow: 0 10px 24px rgba(0,0,0,.25); white-space: nowrap; }
 
-    .badge {
-      pointer-events: auto;
-      color: #fff;
-      background: rgba(0,0,0,.55);
-      border: 1px solid rgba(255,255,255,.2);
-      border-radius: 14px;
-      padding: 10px 12px;
-      backdrop-filter: blur(8px);
-      font-size: 13px;
-      line-height: 1.2;
-      box-shadow: 0 10px 24px rgba(0,0,0,.25);
-      white-space: nowrap;
-    }
-
-    /* Нижняя панель */
-    .panel {
-      position: fixed;
-      left: 12px;
-      right: 12px;
-      bottom: 12px;
-      z-index: 10;
-      pointer-events: none;
-    }
-
-    .card {
-      pointer-events: auto;
-      color: #fff;
-      background: rgba(0,0,0,.55);
-      border: 1px solid rgba(255,255,255,.2);
-      border-radius: 18px;
-      padding: 14px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 12px 30px rgba(0,0,0,.35);
-    }
-
-    .hint {
-      opacity: .95;
-      font-size: 12px;
-      line-height: 1.35;
-      margin-bottom: 10px;
-    }
-
-    .row {
-      display: flex;
-      gap: 10px;
-    }
-
-    button {
-      flex: 1 1 auto;
-      padding: 12px;
-      border-radius: 14px;
-      border: none;
-      font-size: 15px;
-      font-weight: 650;
-      cursor: pointer;
-    }
-
+    .panel { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 10; pointer-events: none; }
+    .card { pointer-events: auto; color: #fff; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.2); border-radius: 18px; padding: 14px; backdrop-filter: blur(10px); box-shadow: 0 12px 30px rgba(0,0,0,.35); }
+    .hint { opacity: .95; font-size: 12px; line-height: 1.35; margin-bottom: 10px; }
+    .row { display: flex; gap: 10px; }
+    button { flex: 1 1 auto; padding: 12px; border-radius: 14px; border: none; font-size: 15px; font-weight: 650; cursor: pointer; }
     button.primary { background: #ffffff; color: #000; }
     button.secondary { background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.18); }
     button:disabled { opacity: .65; cursor: not-allowed; }
@@ -99,7 +27,6 @@
 </head>
 
 <body>
-
   <div class="topbar">
     <div class="badge" id="status">Готово к запуску</div>
     <div class="badge">AR • marker</div>
@@ -119,7 +46,6 @@
     </div>
   </div>
 
-  <!-- AR сцена -->
   <a-scene
     id="scene"
     mindar-image="imageTargetSrc: marker.mind; autoStart: false; uiScanning: false; uiLoading: false;"
@@ -128,25 +54,26 @@
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: true"
   >
-    <!-- Камера -->
+    <!-- Предзагрузка ассетов -->
+    <a-assets>
+      <a-asset-item id="objAsset" src="object.glb"></a-asset-item>
+    </a-assets>
+
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <!-- Свет: чуть усилен, чтобы модель точно была видна -->
     <a-entity light="type: ambient; intensity: 1.0"></a-entity>
     <a-entity light="type: directional; intensity: 1.2" position="0.2 1.4 1.0"></a-entity>
 
-    <!-- Якорь -->
     <a-entity id="markerRoot" mindar-image-target="targetIndex: 0">
-      <!-- ВАЖНО: добавили dracoDecoderPath + увеличили шанс увидеть модель -->
+      <!-- ВАЖНО: теперь gltf-model указывает на asset id -->
       <a-entity
         id="object"
-        gltf-model="url(object.glb); dracoDecoderPath: https://www.gstatic.com/draco/v1/decoders/;"
+        gltf-model="#objAsset"
         position="0 0.08 0"
         rotation="0 180 0"
         scale="1 1 1"
       ></a-entity>
 
-      <!-- Подложка -->
       <a-ring position="0 -0.001 0"
               rotation="-90 0 0"
               radius-inner="0.18"
@@ -165,26 +92,28 @@
     const resetBtn = document.getElementById("resetBtn");
     const statusEl = document.getElementById("status");
 
-    // Сохраняем дефолтные трансформации для сброса
     const DEFAULT = {
       pos: { x: 0, y: 0.08, z: 0 },
       rotYdeg: 180,
       scale: 1
     };
 
-    // === Диагностика загрузки модели ===
+    // Диагностика ассетов (самое полезное)
+    sceneEl.addEventListener("loaded", () => console.log("scene loaded"));
+    sceneEl.addEventListener("loaded", () => { statusEl.textContent = "Сцена загружена. Запусти AR"; });
+
     obj.addEventListener("model-loaded", () => {
       statusEl.textContent = "Модель загружена ✅ Наведи на маркер";
+      console.log("model-loaded");
     });
 
     obj.addEventListener("model-error", (e) => {
       console.error("model-error", e);
-      statusEl.textContent = "Ошибка загрузки модели ❌ (см. Console)";
-      // оставим кнопку активной — вдруг пользователь перезагрузит
+      statusEl.textContent = "Ошибка загрузки модели ❌";
       startBtn.disabled = false;
+      alert("Модель не загрузилась. Проверь object.glb (формат/размер) и что он лежит в корне Pages.");
     });
 
-    // === События маркера ===
     markerRoot.addEventListener("targetFound", () => {
       statusEl.textContent = "Маркер распознан ✅";
       resetBtn.disabled = false;
@@ -194,7 +123,6 @@
       statusEl.textContent = "Ищу маркер…";
     });
 
-    // === Запуск AR по клику (стабильно для iOS/Android) ===
     startBtn.addEventListener("click", async () => {
       try {
         statusEl.textContent = "Запуск камеры…";
@@ -210,13 +138,11 @@
         statusEl.textContent = "Камера запущена. Наведи на маркер";
       } catch (e) {
         console.error(e);
-        statusEl.textContent = "Ошибка запуска AR ❌ (см. Console)";
+        statusEl.textContent = "Ошибка запуска AR ❌";
         startBtn.disabled = false;
-        alert("Не удалось запустить AR. Проверь HTTPS и разрешение камеры.");
       }
     });
 
-    // === Сброс ===
     resetBtn.addEventListener("click", () => {
       obj.object3D.position.set(DEFAULT.pos.x, DEFAULT.pos.y, DEFAULT.pos.z);
       obj.object3D.rotation.y = (DEFAULT.rotYdeg * Math.PI) / 180;
@@ -224,7 +150,7 @@
       statusEl.textContent = "Сброс выполнен ↺";
     });
 
-    // === Жесты: перемещение / масштаб / вращение ===
+    // Жесты
     let mode = "none";
     let lastX = 0, lastY = 0;
     let startDist = 0;
@@ -239,16 +165,12 @@
       const dy = t2.clientY - t1.clientY;
       return Math.hypot(dx, dy);
     }
-
     function angle(t1, t2) {
       const dx = t2.clientX - t1.clientX;
       const dy = t2.clientY - t1.clientY;
       return Math.atan2(dy, dx) * 180 / Math.PI;
     }
-
-    function clamp(v, min, max) {
-      return Math.max(min, Math.min(max, v));
-    }
+    function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
     document.addEventListener("touchstart", (e) => {
       if (!obj) return;
@@ -258,7 +180,6 @@
         lastX = e.touches[0].clientX;
         lastY = e.touches[0].clientY;
       }
-
       if (e.touches.length === 2) {
         mode = "pinch";
         startDist = dist(e.touches[0], e.touches[1]);
