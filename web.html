@@ -118,11 +118,14 @@
 
     <a-entity id="markerRoot" mindar-image-target="targetIndex: 0">
       <a-entity
-        id="object"
-        gltf-model="url(object.glb)"
-        position="0 0 0"
-        rotation="0 0 0"
-        scale="0.32 0.32 0.32"
+  id="object"
+  gltf-model="url(object.glb)"
+  gltf-model="dracoDecoderPath: https://www.gstatic.com/draco/v1/decoders/;"
+  position="0 0 0"
+  rotation="0 0 0"
+  scale="1 1 1"
+></a-entity>
+
       ></a-entity>
 
       <a-ring position="0 -0.001 0"
@@ -268,4 +271,5 @@
   </script>
 </body>
 </html>
+
 
